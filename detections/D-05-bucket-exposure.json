@@ -1,0 +1,15 @@
+{
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "source": ["aws.s3"],
+  "detail": {
+    "eventName": [
+      "PutBucketAcl",
+      "PutBucketPolicy",
+      "PutBucketPublicAccessBlock",
+      "PutPublicAccessBlock",
+      "DeleteBucketPublicAccessBlock",
+      "DeletePublicAccessBlock",
+      "DeleteBucketPolicy"
+    ]
+  }
+}

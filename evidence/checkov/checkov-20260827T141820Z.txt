@@ -1,0 +1,397 @@
+2026-08-27 14:18:23,531 [MainThread  ] [WARNI]  Failed to get the checkov mappings and guidelines from https://api0.prismacloud.io/bridgecrew/api/v2/guidelines. Skips using BC_* IDs will not work.
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 773, in urlopen
+    self._prepare_proxy(conn)
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1042, in _prepare_proxy
+    conn.connect()
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connection.py", line 776, in connect
+    self._tunnel()
+  File "/usr/lib/python3.11/http/client.py", line 963, in _tunnel
+    raise OSError(f"Tunnel connection failed: {code} {message.strip()}")
+OSError: Tunnel connection failed: 403 Forbidden
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/dist-packages/checkov/common/bridgecrew/platform_integration.py", line 1276, in get_public_run_config
+    request = self.http.request("GET", self.guidelines_api_url, headers=headers)  # type:ignore[no-untyped-call]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/_request_methods.py", line 135, in request
+    return self.request_encode_url(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/_request_methods.py", line 182, in request_encode_url
+    return self.urlopen(method, url, **extra_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/poolmanager.py", line 647, in urlopen
+    return super().urlopen(method, url, redirect=redirect, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api0.prismacloud.io', port=443): Max retries exceeded with url: /bridgecrew/api/v2/guidelines (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By Prisma Cloud | version: 3.3.15 
+
+terraform scan results:
+
+Passed checks: 59, Failed checks: 0, Skipped checks: 23
+
+Check: CKV_AWS_41: "Ensure no hard coded AWS access key and secret key exists in provider"
+	PASSED for resource: aws.default
+	File: /environments/lab/versions.tf:16-30
+Check: CKV_AWS_26: "Ensure all data stored in the SNS topic is encrypted"
+	PASSED for resource: module.detection.aws_sns_topic.alerts
+	File: /modules/detection/main.tf:103-115
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_66: "Ensure that CloudWatch Log Group specifies retention days"
+	PASSED for resource: module.detection.aws_cloudwatch_log_group.detector
+	File: /modules/detection/main.tf:127-134
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_115: "Ensure that AWS Lambda function is configured for function-level concurrent execution limit"
+	PASSED for resource: module.detection.aws_lambda_function.detector
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_45: "Ensure no hard-coded secrets exist in lambda environment"
+	PASSED for resource: module.detection.aws_lambda_function.detector
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_363: "Ensure Lambda Runtime is not deprecated"
+	PASSED for resource: module.detection.aws_lambda_function.detector
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_66: "Ensure that CloudWatch Log Group specifies retention days"
+	PASSED for resource: module.detection.aws_cloudwatch_log_group.responder
+	File: /modules/detection/main.tf:186-193
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_115: "Ensure that AWS Lambda function is configured for function-level concurrent execution limit"
+	PASSED for resource: module.detection.aws_lambda_function.responder
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_45: "Ensure no hard-coded secrets exist in lambda environment"
+	PASSED for resource: module.detection.aws_lambda_function.responder
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_363: "Ensure Lambda Runtime is not deprecated"
+	PASSED for resource: module.detection.aws_lambda_function.responder
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_364: "Ensure that AWS Lambda function permissions delegated to AWS services are limited by SourceArn or SourceAccount"
+	PASSED for resource: module.detection.aws_lambda_permission.allow_eventbridge_root_usage
+	File: /modules/detection/main.tf:255-261
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_301: "Ensure that AWS Lambda function is not publicly accessible"
+	PASSED for resource: module.detection.aws_lambda_permission.allow_eventbridge_root_usage
+	File: /modules/detection/main.tf:255-261
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_364: "Ensure that AWS Lambda function permissions delegated to AWS services are limited by SourceArn or SourceAccount"
+	PASSED for resource: module.detection.aws_lambda_permission.allow_eventbridge_scoped_events
+	File: /modules/detection/main.tf:288-294
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_301: "Ensure that AWS Lambda function is not publicly accessible"
+	PASSED for resource: module.detection.aws_lambda_permission.allow_eventbridge_scoped_events
+	File: /modules/detection/main.tf:288-294
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_61: "Ensure AWS IAM policy does not allow assume role permission across all services"
+	PASSED for resource: module.iam_hardened.aws_iam_role.investigator
+	File: /modules/iam-hardened/main.tf:55-65
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_60: "Ensure IAM role allows only specific services or principals to assume it"
+	PASSED for resource: module.iam_hardened.aws_iam_role.investigator
+	File: /modules/iam-hardened/main.tf:55-65
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_274: "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy"
+	PASSED for resource: module.iam_hardened.aws_iam_role.investigator
+	File: /modules/iam-hardened/main.tf:55-65
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_393: "Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role"
+	PASSED for resource: module.iam_hardened.aws_iam_role.investigator
+	File: /modules/iam-hardened/main.tf:55-65
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_62: "Ensure IAM policies that allow full "*-*" administrative privileges are not created"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.investigator_readonly
+	File: /modules/iam-hardened/main.tf:67-74
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_63: "Ensure no IAM policies documents allow "*" as a statement's actions"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.investigator_readonly
+	File: /modules/iam-hardened/main.tf:67-74
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_61: "Ensure AWS IAM policy does not allow assume role permission across all services"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:80-85
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_60: "Ensure IAM role allows only specific services or principals to assume it"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:80-85
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_274: "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:80-85
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_393: "Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:80-85
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_62: "Ensure IAM policies that allow full "*-*" administrative privileges are not created"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:87-98
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_63: "Ensure no IAM policies documents allow "*" as a statement's actions"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:87-98
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_61: "Ensure AWS IAM policy does not allow assume role permission across all services"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:104-109
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_60: "Ensure IAM role allows only specific services or principals to assume it"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:104-109
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_274: "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:104-109
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_393: "Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role"
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:104-109
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_62: "Ensure IAM policies that allow full "*-*" administrative privileges are not created"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:111-122
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_63: "Ensure no IAM policies documents allow "*" as a statement's actions"
+	PASSED for resource: module.iam_hardened.aws_iam_role_policy.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:111-122
+	Calling File: /environments/lab/main.tf:41-52
+Check: CKV_AWS_62: "Ensure IAM policies that allow full "*-*" administrative privileges are not created"
+	PASSED for resource: module.iam_lab_weak.aws_iam_policy.lab_weak_boundary
+	File: /modules/iam-lab-weak/main.tf:62-75
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_63: "Ensure no IAM policies documents allow "*" as a statement's actions"
+	PASSED for resource: module.iam_lab_weak.aws_iam_policy.lab_weak_boundary
+	File: /modules/iam-lab-weak/main.tf:62-75
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_62: "Ensure IAM policies that allow full "*-*" administrative privileges are not created"
+	PASSED for resource: module.iam_lab_weak.aws_iam_policy.lab_weak_attached
+	File: /modules/iam-lab-weak/main.tf:77-86
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_63: "Ensure no IAM policies documents allow "*" as a statement's actions"
+	PASSED for resource: module.iam_lab_weak.aws_iam_policy.lab_weak_attached
+	File: /modules/iam-lab-weak/main.tf:77-86
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_274: "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy"
+	PASSED for resource: module.iam_lab_weak.aws_iam_user_policy_attachment.lab_weak
+	File: /modules/iam-lab-weak/main.tf:99-103
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_93: "Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)"
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_53: "Ensure S3 bucket has block public ACLS enabled"
+	PASSED for resource: module.logging.aws_s3_bucket_public_access_block.trail
+	File: /modules/logging/main.tf:37-44
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_54: "Ensure S3 bucket has block public policy enabled"
+	PASSED for resource: module.logging.aws_s3_bucket_public_access_block.trail
+	File: /modules/logging/main.tf:37-44
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_56: "Ensure S3 bucket has 'restrict_public_buckets' enabled"
+	PASSED for resource: module.logging.aws_s3_bucket_public_access_block.trail
+	File: /modules/logging/main.tf:37-44
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_55: "Ensure S3 bucket has ignore public ACLs enabled"
+	PASSED for resource: module.logging.aws_s3_bucket_public_access_block.trail
+	File: /modules/logging/main.tf:37-44
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_300: "Ensure S3 lifecycle configuration sets period for aborting failed uploads"
+	PASSED for resource: module.logging.aws_s3_bucket_lifecycle_configuration.trail
+	File: /modules/logging/main.tf:70-96
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_93: "Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)"
+	PASSED for resource: module.logging.aws_s3_bucket_policy.trail
+	File: /modules/logging/main.tf:98-111
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_36: "Ensure CloudTrail log file validation is enabled"
+	PASSED for resource: module.logging.aws_cloudtrail.this
+	File: /modules/logging/main.tf:113-130
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_67: "Ensure CloudTrail is enabled in all Regions"
+	PASSED for resource: module.logging.aws_cloudtrail.this
+	File: /modules/logging/main.tf:113-130
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_251: "Ensure CloudTrail logging is enabled"
+	PASSED for resource: module.logging.aws_cloudtrail.this
+	File: /modules/logging/main.tf:113-130
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV2_AWS_22: "Ensure an IAM User does not have access to the console"
+	PASSED for resource: module.iam_lab_weak.aws_iam_user.lab
+	File: /modules/iam-lab-weak/main.tf:88-97
+Check: CKV2_AWS_75: "Ensure no open CORS policy"
+	PASSED for resource: module.detection.aws_lambda_function.detector
+	File: /modules/detection/main.tf:136-180
+Check: CKV2_AWS_75: "Ensure no open CORS policy"
+	PASSED for resource: module.detection.aws_lambda_function.responder
+	File: /modules/detection/main.tf:195-224
+Check: CKV2_AWS_6: "Ensure that S3 bucket has a Public Access block"
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV2_AWS_56: "Ensure AWS Managed IAMFullAccess IAM policy is not used."
+	PASSED for resource: module.iam_hardened.aws_iam_role.investigator
+	File: /modules/iam-hardened/main.tf:55-65
+Check: CKV2_AWS_56: "Ensure AWS Managed IAMFullAccess IAM policy is not used."
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_detector_exec
+	File: /modules/iam-hardened/main.tf:80-85
+Check: CKV2_AWS_56: "Ensure AWS Managed IAMFullAccess IAM policy is not used."
+	PASSED for resource: module.iam_hardened.aws_iam_role.lambda_responder_exec
+	File: /modules/iam-hardened/main.tf:104-109
+Check: CKV_AWS_20: "S3 Bucket has an ACL defined which allows public READ access."
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV2_AWS_61: "Ensure that an S3 bucket has a lifecycle configuration"
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_57: "S3 Bucket has an ACL defined which allows public WRITE access."
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_19: "Ensure all data stored in the S3 bucket is securely encrypted at rest"
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_21: "Ensure all data stored in the S3 bucket have versioning enabled"
+	PASSED for resource: module.logging.aws_s3_bucket.trail
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_158: "Ensure that CloudWatch Log Group is encrypted by KMS"
+	SKIPPED for resource: module.detection.aws_cloudwatch_log_group.detector
+	Suppress comment: AWS-owned encryption (CloudWatch Logs' default) is sufficient for execution/detection logs containing no secrets or PII — a customer-managed CMK costs ~$1/month/key for no meaningful benefit at this project's scale. See SECURITY.md.
+	File: /modules/detection/main.tf:127-134
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_338: "Ensure CloudWatch log groups retains logs for at least 1 year"
+	SKIPPED for resource: module.detection.aws_cloudwatch_log_group.detector
+	Suppress comment: 14-day retention (var.log_retention_days) is a deliberate cost control, not an oversight — see COST.md. This is a personal lab with no compliance requirement to retain execution logs for a year.
+	File: /modules/detection/main.tf:127-134
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
+	SKIPPED for resource: module.detection.aws_lambda_function.detector
+	Suppress comment: No DLQ configured — a reasonable v2 enhancement (see SECURITY.md's Known Limitations), deliberately out of scope for this project's size. EventBridge itself retries failed async Lambda invocations before giving up.
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
+	SKIPPED for resource: module.detection.aws_lambda_function.detector
+	Suppress comment: Deliberately NOT in a VPC — this function only calls AWS service APIs (SNS, IAM, Lambda) and needs neither internet egress nor access to any VPC-private resource. VPC placement would require NAT Gateway (~$32/month, against this project's cost philosophy) or VPC endpoints for no security benefit against this threat model. See SECURITY.md.
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_272: "Ensure AWS Lambda function is configured to validate code-signing"
+	SKIPPED for resource: module.detection.aws_lambda_function.detector
+	Suppress comment: Code-signing (AWS Signer) is a software-supply-chain control disproportionate to a personal portfolio lab — noted as a future enhancement in SECURITY.md, not implemented here.
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_173: "Check encryption settings for Lambda environmental variable"
+	SKIPPED for resource: module.detection.aws_lambda_function.detector
+	Suppress comment: Environment variables here (SNS_TOPIC_ARN, RESPONDER_FUNCTION_NAME, LAB_USER_ARN) are resource identifiers, not secrets — confirmed by code review. Lambda already encrypts them at rest with an AWS-owned key by default; a customer CMK adds cost/complexity for no benefit to non-sensitive values.
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_50: "X-Ray tracing is enabled for Lambda"
+	SKIPPED for resource: module.detection.aws_lambda_function.detector
+	Suppress comment: X-Ray tracing not enabled — a reasonable observability enhancement, deliberately deferred (see SECURITY.md's Known Limitations) to keep this project's scope focused on detection/response rather than broader AWS feature coverage.
+	File: /modules/detection/main.tf:136-180
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_158: "Ensure that CloudWatch Log Group is encrypted by KMS"
+	SKIPPED for resource: module.detection.aws_cloudwatch_log_group.responder
+	Suppress comment: Same reasoning as aws_cloudwatch_log_group.detector above.
+	File: /modules/detection/main.tf:186-193
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_338: "Ensure CloudWatch log groups retains logs for at least 1 year"
+	SKIPPED for resource: module.detection.aws_cloudwatch_log_group.responder
+	Suppress comment: Same reasoning as aws_cloudwatch_log_group.detector above.
+	File: /modules/detection/main.tf:186-193
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
+	SKIPPED for resource: module.detection.aws_lambda_function.responder
+	Suppress comment: Same reasoning as aws_lambda_function.detector above.
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
+	SKIPPED for resource: module.detection.aws_lambda_function.responder
+	Suppress comment: Same reasoning as aws_lambda_function.detector above.
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_272: "Ensure AWS Lambda function is configured to validate code-signing"
+	SKIPPED for resource: module.detection.aws_lambda_function.responder
+	Suppress comment: Same reasoning as aws_lambda_function.detector above.
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_173: "Check encryption settings for Lambda environmental variable"
+	SKIPPED for resource: module.detection.aws_lambda_function.responder
+	Suppress comment: Environment variables here (SNS_TOPIC_ARN, LAB_USER_ARN) are resource identifiers, not secrets — confirmed by code review. Same reasoning as aws_lambda_function.detector above.
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_50: "X-Ray tracing is enabled for Lambda"
+	SKIPPED for resource: module.detection.aws_lambda_function.responder
+	Suppress comment: Same reasoning as aws_lambda_function.detector above.
+	File: /modules/detection/main.tf:195-224
+	Calling File: /environments/lab/main.tf:63-76
+Check: CKV_AWS_273: "Ensure access is controlled through SSO and not AWS IAM defined users"
+	SKIPPED for resource: module.iam_lab_weak.aws_iam_user.lab
+	Suppress comment: This IS the finding, not a gap. A directly-defined IAM user with a direct policy attachment (instead of SSO / group membership) is exactly the over-permissioned legacy identity pattern this entire project exists to detect and contain — see this file's header comment and IAM_DESIGN.md. Checkov flagging it here confirms the scanner works correctly, the same way tests/offline/test_checkov_scan.py's known-bad fixture does deliberately.
+	File: /modules/iam-lab-weak/main.tf:88-97
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_40: "Ensure IAM policies are attached only to groups or roles (Reducing access management complexity may in-turn reduce opportunity for a principal to inadvertently receive or retain excessive privileges.)"
+	SKIPPED for resource: module.iam_lab_weak.aws_iam_user_policy_attachment.lab_weak
+	Suppress comment: Same reasoning as aws_iam_user.lab above — a policy attached directly to a user (rather than a group/role) is the deliberate subject of this project, not an oversight.
+	File: /modules/iam-lab-weak/main.tf:99-103
+	Calling File: /environments/lab/main.tf:54-61
+Check: CKV_AWS_252: "Ensure CloudTrail defines an SNS Topic"
+	SKIPPED for resource: module.logging.aws_cloudtrail.this
+	Suppress comment: CloudTrail's native SNS notification (one message per delivered log file) is a legacy/alternative pattern this project deliberately does not use — detection is driven entirely through EventBridge's native CloudTrail integration instead (see terraform/modules/detection/main.tf), which was chosen during this project's design phase specifically because it's free for same-account delivery, unlike the CloudWatch Logs subscription alternative. Enabling this too would be redundant, not a fix.
+	File: /modules/logging/main.tf:113-130
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV_AWS_35: "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
+	SKIPPED for resource: module.logging.aws_cloudtrail.this
+	Suppress comment: SSE-S3 (AES-256) on the destination bucket already encrypts the log objects at rest. A customer-managed KMS key for the trail itself costs ~$1/month for no meaningful benefit to a personal lab's non-regulated data — see the identical trade-off noted on aws_s3_bucket.trail above and in COST.md.
+	File: /modules/logging/main.tf:113-130
+	Calling File: /environments/lab/main.tf:32-39
+Check: CKV2_AWS_62: "Ensure S3 buckets should have event notifications enabled"
+	SKIPPED for resource: module.logging.aws_s3_bucket.trail
+	Suppress comment: This project deliberately routes detection through EventBridge's native CloudTrail integration (see terraform/modules/detection/main.tf), not S3 event notifications on this bucket — a different, already-documented notification mechanism, not a gap. S3 event notifications would fire on "a new log object appeared," which isn't the signal this project's detections evaluate.
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_18: "Ensure the S3 bucket has access logging enabled"
+	SKIPPED for resource: module.logging.aws_s3_bucket.trail
+	Suppress comment: Access logging would require a SECOND bucket to receive access logs about the trail bucket itself — cost/complexity disproportionate to a personal lab. The trail already captures management-event API calls made against this bucket (PutBucketPolicy, PutBucketAcl, etc. — see detections/D-02-logging-tamper.md); what's not captured is object-level data-plane access (GetObject/PutObject), which this project's threat model does not need visibility into.
+	File: /modules/logging/main.tf:22-32
+Check: CKV_AWS_144: "Ensure that S3 bucket has cross-region replication enabled"
+	SKIPPED for resource: module.logging.aws_s3_bucket.trail
+	Suppress comment: Cross-region replication is a disaster-recovery control, not a security one, and adds a second bucket's worth of ongoing cost — disproportionate to a $5/month personal lab budget. See COST.md.
+	File: /modules/logging/main.tf:22-32
+Check: CKV2_AWS_10: "Ensure CloudTrail trails are integrated with CloudWatch Logs"
+	SKIPPED for resource: module.logging.aws_cloudtrail.this
+	Suppress comment: Deliberately not integrated with CloudWatch Logs — that delivery path costs $0.50/GB at this project's low-volume scale (AWS's ingestion pricing is tiered; verified during this project's design phase) and EventBridge's native CloudTrail integration is free for the same-account use case this project needs. See ARCHITECTURE.md/COST.md for the original cost comparison this decision was based on.
+	File: /modules/logging/main.tf:113-130
+Check: CKV_AWS_145: "Ensure that S3 buckets are encrypted with KMS by default"
+	SKIPPED for resource: module.logging.aws_s3_bucket.trail
+	Suppress comment: SSE-S3 (AES-256, set below) already encrypts all data at rest. A customer-managed KMS key costs ~$1/month for no meaningful benefit to a personal lab's non-regulated log data — the same trade-off already called out in this file's own SSE comment below and in COST.md.
+	File: /modules/logging/main.tf:22-32
+

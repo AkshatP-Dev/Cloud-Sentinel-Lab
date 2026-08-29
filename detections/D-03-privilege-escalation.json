@@ -1,0 +1,20 @@
+{
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "source": ["aws.iam", "aws.sts"],
+  "detail": {
+    "eventName": [
+      "CreateUser",
+      "AttachUserPolicy",
+      "AttachRolePolicy",
+      "PutUserPolicy",
+      "PutRolePolicy",
+      "CreatePolicyVersion",
+      "PassRole",
+      "AssumeRole",
+      "PutUserPermissionsBoundary",
+      "DeleteUserPermissionsBoundary",
+      "PutRolePermissionsBoundary",
+      "DeleteRolePermissionsBoundary"
+    ]
+  }
+}

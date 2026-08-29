@@ -1,0 +1,10 @@
+{
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "source": ["aws.iam"],
+  "detail": {
+    "eventName": [
+      "CreateAccessKey",
+      "UpdateAccessKey"
+    ]
+  }
+}

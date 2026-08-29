@@ -1,0 +1,9 @@
+# Dev/test dependencies only — the Lambda functions themselves have no
+# third-party dependencies beyond boto3, which the Lambda managed Python
+# runtime already provides (see terraform/modules/detection/main.tf's
+# comment on why archive_file zips source directly with no pip install
+# step).
+boto3>=1.34
+moto[iam,sns]>=5.0
+pytest>=8.0
+checkov>=3.2

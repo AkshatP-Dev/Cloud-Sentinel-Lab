@@ -1,0 +1,26 @@
+# Copy this file to terraform.tfvars and fill in your own values.
+# terraform.tfvars is gitignored — never commit real values to git.
+
+# aws_region: pick one region and stick with it. The lab permission
+# boundary denies activity outside this region.
+aws_region = "us-east-1"
+
+# operator_principal_arn: YOUR OWN IAM identity's ARN. Find it with:
+#   aws sts get-caller-identity --query Arn --output text
+# If that returns an "assumed-role" ARN (you're using SSO/Identity Center),
+# see the variable description in variables.tf — you need the underlying
+# role ARN instead, not the session ARN.
+operator_principal_arn = "arn:aws:iam::123456789012:user/your-iam-username"
+
+# alert_email: where SNS findings and AWS Budget notifications go. AWS
+# emails a confirmation link after `terraform apply` — click it or you
+# won't receive anything.
+alert_email = "you@example.com"
+
+# trail_bucket_name: must be GLOBALLY unique across all of AWS. Suffix
+# with your account ID (from the command above) to avoid collisions.
+trail_bucket_name = "cloudsentinel-trail-123456789012"
+
+# monthly_budget_usd: account-wide AWS Budget tripwire. Notifies at 80%
+# and 100% of this amount.
+monthly_budget_usd = 5

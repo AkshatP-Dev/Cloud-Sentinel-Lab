@@ -1,0 +1,23 @@
+{
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "source": ["aws.cloudtrail", "aws.s3"],
+  "detail": {
+    "eventName": [
+      "StopLogging",
+      "DeleteTrail",
+      "UpdateTrail",
+      "PutEventSelectors",
+      "RemoveTags",
+      "PutBucketPolicy",
+      "DeleteBucketPolicy",
+      "PutBucketPublicAccessBlock",
+      "PutPublicAccessBlock",
+      "DeleteBucketPublicAccessBlock",
+      "DeletePublicAccessBlock",
+      "PutBucketAcl",
+      "PutBucketVersioning",
+      "DeleteBucket",
+      "PutLifecycleConfiguration"
+    ]
+  }
+}
