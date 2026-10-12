@@ -23,10 +23,10 @@ data "aws_caller_identity" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
 
-  sns_topic_name           = "cloudsentinel-alerts"
-  detector_function_name   = "cloudsentinel-detector"
-  responder_function_name  = "cloudsentinel-responder"
-  lab_user_name            = "cloudsentinel-lab-user"
+  sns_topic_name          = "cloudsentinel-alerts"
+  detector_function_name  = "cloudsentinel-detector"
+  responder_function_name = "cloudsentinel-responder"
+  lab_user_name           = "cloudsentinel-lab-user"
 }
 
 module "logging" {
@@ -42,13 +42,13 @@ module "iam_hardened" {
   source = "../../modules/iam-hardened"
 
   account_id              = local.account_id
-  aws_region               = var.aws_region
+  aws_region              = var.aws_region
   operator_principal_arn  = var.operator_principal_arn
-  trail_bucket_arn         = module.logging.trail_bucket_arn
-  sns_topic_name           = local.sns_topic_name
-  detector_function_name   = local.detector_function_name
-  responder_function_name  = local.responder_function_name
-  lab_user_name            = local.lab_user_name
+  trail_bucket_arn        = module.logging.trail_bucket_arn
+  sns_topic_name          = local.sns_topic_name
+  detector_function_name  = local.detector_function_name
+  responder_function_name = local.responder_function_name
+  lab_user_name           = local.lab_user_name
 }
 
 module "iam_lab_weak" {
@@ -63,16 +63,16 @@ module "iam_lab_weak" {
 module "detection" {
   source = "../../modules/detection"
 
-  account_id                      = local.account_id
-  aws_region                      = var.aws_region
-  lambda_detector_exec_role_arn   = module.iam_hardened.lambda_detector_exec_role_arn
-  lambda_responder_exec_role_arn  = module.iam_hardened.lambda_responder_exec_role_arn
-  detector_function_name          = local.detector_function_name
-  responder_function_name         = local.responder_function_name
-  sns_topic_name                  = local.sns_topic_name
-  alert_email                     = var.alert_email
-  lab_user_arn                    = module.iam_lab_weak.lab_user_arn
-  log_retention_days              = var.log_retention_days
+  account_id                     = local.account_id
+  aws_region                     = var.aws_region
+  lambda_detector_exec_role_arn  = module.iam_hardened.lambda_detector_exec_role_arn
+  lambda_responder_exec_role_arn = module.iam_hardened.lambda_responder_exec_role_arn
+  detector_function_name         = local.detector_function_name
+  responder_function_name        = local.responder_function_name
+  sns_topic_name                 = local.sns_topic_name
+  alert_email                    = var.alert_email
+  lab_user_arn                   = module.iam_lab_weak.lab_user_arn
+  log_retention_days             = var.log_retention_days
 }
 
 # ---------------------------------------------------------------------------

@@ -13,7 +13,7 @@ about real AWS behavior as **requires verification**, not confirmed.
 
 ```
 Unit tests:          36 passed, 0 failed
-Offline tests:       11 passed, 0 failed
+Offline tests:       13 passed, 0 failed
 Checkov:             59 passed, 0 failed, 23 skipped (all documented — see SECURITY.md)
 Structural validator: PASS
 Live AWS tests:      REQUIRES VERIFICATION — see RESULTS.md

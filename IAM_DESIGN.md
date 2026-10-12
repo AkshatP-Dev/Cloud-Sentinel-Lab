@@ -90,11 +90,13 @@ evaluate "does this ARN match this prefix" without the resource existing yet. Th
 replacing a condition that is blind at creation time with a resource pattern that isn't. A secondary
 `aws:RequestTag/project: cloudsentinel` condition (`StringEqualsIfExists`) is layered on top — note
 `RequestTag`, not `ResourceTag`: `RequestTag` evaluates tags supplied *with the current request*, which
-does work at creation time, unlike `ResourceTag`. This statement only grants IAM user/policy CRUD
-actions (`CreateUser`, `DeleteUser`, `TagUser`, `UntagUser`, `CreatePolicy`, `DeletePolicy`,
+does work at creation time, unlike `ResourceTag`. This statement grants IAM user/policy CRUD
+actions (`DeleteUser`, `TagUser`, `UntagUser`, `CreatePolicy`, `DeletePolicy`,
 `CreatePolicyVersion`, `DeletePolicyVersion`, `AttachUserPolicy`, `DetachUserPolicy`, `PutUserPolicy`,
 `DeleteUserPolicy`, `CreateAccessKey`, `DeleteAccessKey`, `UpdateAccessKey`) — a deliberately short list,
-not `iam:*`.
+not `iam:*`. (`iam:CreateUser` was originally in this same list too; §3.5 explains why it was moved into
+its own statement with an additional condition, and describes a real gap this version of the design
+still had.)
 
 **`AllowBroadReadOnlyForDemonstration`** — read-only IAM/CloudTrail/S3-listing/STS-identity actions,
 `Resource: "*"`. Read access can't escalate privilege or cause damage, so it doesn't need ARN scoping.
@@ -103,7 +105,8 @@ not `iam:*`.
 a resource that doesn't exist yet, because a `Deny` with no condition always evaluates:
 
 - `DenyEscapingTheBoundaryItself` — denies `iam:{Put,Delete}{User,Role}PermissionsBoundary` outright.
-  The lab user can never remove or replace its own ceiling.
+  The lab user can never detach or swap the boundary on any identity. (Editing the boundary policy's own
+  document is a separate action; §3.6 covers it.)
 - `DenyPrivilegeEscalationPrimitives` — denies `iam:PassRole`, `sts:AssumeRole`,
   `sts:AssumeRoleWithSAML`, `sts:AssumeRoleWithWebIdentity` outright. These are the standard building
   blocks of IAM privilege-escalation chains (attach a role to a service, then act as that role); none of
@@ -155,6 +158,90 @@ without performing the action — to verify, against the deployed lab user, all 
 These are live tests against real AWS (see `TESTING.md`) — they require a deployed environment and are
 marked accordingly; they have not been run in this build sandbox (no AWS credentials here), and are
 listed as **requires verification** until run post-deployment.
+
+## 3.5 A second finding, caught in a later audit: `CreateUser` could still mint an unbounded identity
+
+The redesign in §3.3 fixed the tag-condition blind spot, but a follow-up audit (30 Aug 2026) found a
+second, distinct gap in the same statement, this time in what it granted rather than how it scoped it.
+
+**The gap.** `AllowManagingOwnLabScopedIamResources` granted `iam:CreateUser`,
+`iam:AttachUserPolicy`, and `iam:CreateAccessKey` together, all scoped only to the
+`cloudsentinel-lab-*` ARN prefix, with no condition on what boundary (if any) a newly created user
+carried. Nothing in IAM makes a new identity inherit its creator's permission boundary — a boundary
+only applies to a user if it is explicitly attached, either at `CreateUser` time or via a later
+`PutUserPermissionsBoundary` call. That meant the lab identity, despite being correctly boundary-capped
+itself, could still walk the standard IAM privilege-escalation chain entirely inside its allowed
+resource prefix:
+
+1. `iam:CreateUser` a new user named e.g. `cloudsentinel-lab-escalated` — inside the prefix, so allowed,
+   and with **no permission boundary attached**, since nothing required one.
+2. `iam:CreatePolicy` a new `cloudsentinel-lab-*`-named policy with `Action:"*", Resource:"*"` — also
+   inside the prefix, also allowed, and policy *content* was never restricted, only its name.
+3. `iam:AttachUserPolicy` that policy onto the new user — allowed, same prefix.
+4. `iam:CreateAccessKey` for the new user — allowed, same prefix.
+
+The resulting credential belongs to a fully unbounded administrator identity, obtained without ever
+requesting an action outside what the boundary's own `Allow` list already permitted. This is the classic
+`CreateUser` → `AttachUserPolicy` → `CreateAccessKey` escalation primitive, and the boundary — despite
+being the mechanism this whole project exists to get right — did not close it, because closing it
+requires constraining what a *newly created* identity is allowed to become, not just where it can be
+created.
+
+**The fix.** `AllowManagingOwnLabScopedIamResources` was split, and `iam:CreateUser` moved into its own
+statement (`AllowCreatingBoundedLabUsers`) carrying an additional condition:
+
+```json
+"Condition": {
+  "StringEqualsIfExists": { "aws:RequestTag/project": "cloudsentinel" },
+  "StringEquals": { "iam:PermissionsBoundary": "${boundary_policy_arn}" }
+}
+```
+
+`iam:PermissionsBoundary` is a condition key IAM populates only when the request itself specifies a
+`--permissions-boundary` — it is not retroactive and does not apply to actions other than
+`CreateUser`/`CreateRole`/`Put*PermissionsBoundary`, which is why it had to move to its own statement
+rather than being added to the combined one (a condition key absent from a request's context makes that
+condition evaluate to false, which would have silently broken the other actions in the same statement).
+Requiring it to `StringEquals` this exact boundary's own ARN means the lab identity can only create a new
+`cloudsentinel-lab-*` user if that user is created carrying **the identical ceiling the lab identity
+itself operates under**. Once that holds, the rest of the chain becomes harmless: `CreateAccessKey` and
+`AttachUserPolicy` are still allowed inside the prefix (unchanged), but whatever gets attached to the new
+user — even another `Action:"*", Resource:"*"` policy — is capped by the same boundary, the same way the
+original lab user's attached policy always has been. No additional restriction on policy *content* or on
+which policies can be attached was needed; the boundary inheritance closes the chain by itself.
+
+The self-reference is resolved without a Terraform dependency cycle: `boundary_policy_arn` is built in
+`terraform/modules/iam-lab-weak/main.tf` from `account_id` plus the policy's own literal name
+(`arn:aws:iam::<account>:policy/cloudsentinel-lab-weak-boundary`), not from
+`aws_iam_policy.lab_weak_boundary.arn` — IAM policy ARNs are deterministic, so the string is guaranteed
+to match the real resource once it exists, without Terraform needing to resolve the resource's own
+computed attribute from inside its own policy document.
+
+Regression coverage: `tests/offline/test_iam_policy_documents.py::test_create_user_requires_matching_permissions_boundary`
+checks the condition is present in the source (no AWS needed); `tests/live/test_permission_boundary_simulation.py::TestCreateUserRequiresPermissionsBoundary`
+proves it empirically post-deployment — `CreateUser` inside the prefix with the correct boundary ARN in
+the simulated request context comes back `allowed`, the identical call with no boundary context key (or
+a different one) comes back denied.
+
+## 3.6 A third finding: the boundary could rewrite its own policy document
+
+**The gap.** The boundary policy is named `cloudsentinel-lab-weak-boundary`, which matches the
+`policy/cloudsentinel-lab-*` prefix that `AllowManagingOwnLabScopedIamResources` grants
+`iam:CreatePolicyVersion` on. `CreatePolicyVersion` with `SetAsDefault=true` publishes a new version and
+makes it active in one call, without needing `iam:SetDefaultPolicyVersion`. So the lab user could replace
+its own ceiling with `Action:"*", Resource:"*"` and become an unbounded administrator. The §3.3 denies on
+`Put/DeleteUserPermissionsBoundary` did not cover this: they stop the boundary being detached or swapped,
+not the boundary document being edited in place.
+
+**The fix.** A new unconditional statement, `DenyRewritingTheBoundaryPolicyItself`, denies
+`iam:CreatePolicyVersion`, `iam:DeletePolicyVersion`, `iam:SetDefaultPolicyVersion` and `iam:DeletePolicy`
+on exactly `${boundary_policy_arn}`. An explicit Deny overrides the prefix-wide Allow, so the lab user can
+still create and version its own `cloudsentinel-lab-*` policies, but never the boundary.
+
+**Regression coverage.** `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion` were added to
+`REQUIRED_DENIED_ACTIONS` in `tests/offline/test_iam_policy_documents.py`. A live
+`SimulatePrincipalPolicy` test for this case has not been written yet; until it is, this fix is verified
+by policy review and the offline check only.
 
 ## 4. The responder's defense-in-depth
 

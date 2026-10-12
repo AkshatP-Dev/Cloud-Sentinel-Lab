@@ -32,7 +32,17 @@
 #       tampering (stopping/deleting/reconfiguring the trail), trail-bucket
 #       tampering (including both plausible IAM action spellings for the S3
 #       public-access-block actions — see that file's own comments), and
-#       requests outside the approved region.
+#       requests outside the approved region;
+#     - an iam:PermissionsBoundary condition on the one Allow that grants
+#       iam:CreateUser, requiring every user the lab identity creates to
+#       carry this SAME boundary. Without it, the lab-scoped ARN-prefix
+#       Allow above would still let the lab user mint a brand-new
+#       "cloudsentinel-lab-*" user with no boundary at all, attach an
+#       admin-equivalent policy to it (also lab-scoped-ARN-permitted), and
+#       mint that user's access key — a full privilege-escalation chain
+#       that never leaves the "allowed" resource prefix. This was found in
+#       a later audit, not the original design pass — see IAM_DESIGN.md
+#       §3.5 for the finding and the fix.
 #
 # This module deliberately does NOT create an access key on the lab user.
 # Simulated "incidents" — in particular, a new access key appearing — are
@@ -59,14 +69,29 @@
 # only on the deterministic ARN string built from lab_user_name in the
 # iam-hardened module.
 
+# Constructed directly from account_id + the policy's own literal name,
+# rather than referencing aws_iam_policy.lab_weak_boundary.arn below, to
+# avoid a Terraform dependency cycle: the boundary's OWN policy document
+# needs to embed this ARN (see the CreateUser statement in
+# lab-weak-boundary.json.tpl and IAM_DESIGN.md §3.5), but Terraform cannot
+# resolve a resource's computed attribute from inside the configuration
+# used to create that same resource. IAM policy ARNs are deterministic —
+# arn:aws:iam::<account>:policy/<name> — so this string is guaranteed to
+# equal aws_iam_policy.lab_weak_boundary.arn once the resource exists.
+locals {
+  boundary_policy_name = "cloudsentinel-lab-weak-boundary"
+  boundary_policy_arn  = "arn:aws:iam::${var.account_id}:policy/${local.boundary_policy_name}"
+}
+
 resource "aws_iam_policy" "lab_weak_boundary" {
-  name        = "cloudsentinel-lab-weak-boundary"
+  name        = local.boundary_policy_name
   description = "Permission boundary for the intentionally-weak CloudSentinel lab user. This is the real ceiling on what the lab identity can do — see this module's main.tf header and IAM_DESIGN.md before changing it."
 
   policy = templatefile("${path.module}/../../policies/lab-weak-boundary.json.tpl", {
-    account_id       = var.account_id
-    aws_region       = var.aws_region
-    trail_bucket_arn = var.trail_bucket_arn
+    account_id          = var.account_id
+    aws_region          = var.aws_region
+    trail_bucket_arn    = var.trail_bucket_arn
+    boundary_policy_arn = local.boundary_policy_arn
   })
 
   tags = {

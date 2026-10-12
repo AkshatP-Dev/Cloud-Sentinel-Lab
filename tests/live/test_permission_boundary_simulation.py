@@ -101,6 +101,79 @@ class TestCreationTimeScoping:
         )
 
 
+class TestCreateUserRequiresPermissionsBoundary:
+    """The escalation chain found in the 30 Aug 2026 audit (IAM_DESIGN.md
+    §3.5): CreateAccessKey, AttachUserPolicy, and CreatePolicy are all
+    allowed inside the cloudsentinel-lab-* prefix, so a CreateUser call
+    that didn't force the new user to carry the same boundary would let
+    the lab identity mint a fully unbounded administrator credential
+    without ever leaving its allowed resource prefix. This class is the
+    direct empirical proof that the fix — a StringEquals condition on
+    iam:PermissionsBoundary — actually closes that chain."""
+
+    def test_create_user_with_matching_boundary_is_allowed(self, iam_client, lab_user_arn, account_id, tf_outputs):
+        target = f"arn:aws:iam::{account_id}:user/cloudsentinel-lab-sim-bounded"
+        decision = _decision(
+            iam_client, lab_user_arn, "iam:CreateUser", target,
+            context_entries=[
+                {
+                    "ContextKeyName": "aws:RequestTag/project",
+                    "ContextKeyValues": ["cloudsentinel"],
+                    "ContextKeyType": "string",
+                },
+                {
+                    "ContextKeyName": "iam:PermissionsBoundary",
+                    "ContextKeyValues": [tf_outputs["lab_weak_boundary_arn"]],
+                    "ContextKeyType": "string",
+                },
+            ],
+        )
+        assert decision == "allowed", (
+            "Expected CreateUser inside the lab prefix to be allowed when the request "
+            "specifies the correct permissions boundary ARN — if this fails, the fix in "
+            "IAM_DESIGN.md §3.5 regressed and legitimate lab-user creation is now broken."
+        )
+
+    def test_create_user_with_no_boundary_specified_is_not_allowed(self, iam_client, lab_user_arn, account_id):
+        target = f"arn:aws:iam::{account_id}:user/cloudsentinel-lab-sim-unbounded"
+        decision = _decision(
+            iam_client, lab_user_arn, "iam:CreateUser", target,
+            context_entries=[{
+                "ContextKeyName": "aws:RequestTag/project",
+                "ContextKeyValues": ["cloudsentinel"],
+                "ContextKeyType": "string",
+            }],
+        )
+        assert decision != "allowed", (
+            "CreateUser with no iam:PermissionsBoundary in the request context must NOT be "
+            "allowed — an allow here means the lab identity can still mint an IAM user with "
+            "no ceiling at all, reopening the escalation chain IAM_DESIGN.md §3.5 documents."
+        )
+
+    def test_create_user_with_wrong_boundary_is_not_allowed(self, iam_client, lab_user_arn, account_id):
+        target = f"arn:aws:iam::{account_id}:user/cloudsentinel-lab-sim-wrong-boundary"
+        decision = _decision(
+            iam_client, lab_user_arn, "iam:CreateUser", target,
+            context_entries=[
+                {
+                    "ContextKeyName": "aws:RequestTag/project",
+                    "ContextKeyValues": ["cloudsentinel"],
+                    "ContextKeyType": "string",
+                },
+                {
+                    "ContextKeyName": "iam:PermissionsBoundary",
+                    "ContextKeyValues": [f"arn:aws:iam::{account_id}:policy/some-other-boundary"],
+                    "ContextKeyType": "string",
+                },
+            ],
+        )
+        assert decision != "allowed", (
+            "CreateUser with a DIFFERENT permissions boundary ARN must not be allowed either — "
+            "swapping in a weaker or empty boundary policy would defeat the fix just as "
+            "completely as specifying none at all."
+        )
+
+
 class TestPrivilegeEscalationPrimitivesAreDenied:
     @pytest.mark.parametrize("action", [
         "iam:PassRole", "sts:AssumeRole", "sts:AssumeRoleWithSAML", "sts:AssumeRoleWithWebIdentity",

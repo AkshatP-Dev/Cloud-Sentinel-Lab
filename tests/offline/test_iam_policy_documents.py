@@ -57,6 +57,8 @@ REQUIRED_DENIED_ACTIONS = {
     # self-boundary removal
     "iam:PutUserPermissionsBoundary", "iam:DeleteUserPermissionsBoundary",
     "iam:PutRolePermissionsBoundary", "iam:DeleteRolePermissionsBoundary",
+    # rewriting the boundary policy document itself (IAM_DESIGN.md §3.6)
+    "iam:CreatePolicyVersion", "iam:SetDefaultPolicyVersion",
     # audit-logging tamper
     "cloudtrail:StopLogging", "cloudtrail:DeleteTrail", "cloudtrail:UpdateTrail",
     # trail-bucket tamper
@@ -129,6 +131,57 @@ def test_boundary_has_no_bare_allow_star_star():
             f"Statement {stmt.get('Sid')} allows Action:'*' Resource:'*' inside the "
             f"BOUNDARY itself — this would make it provide no ceiling at all."
         )
+
+
+def test_create_user_requires_matching_permissions_boundary(boundary):
+    """Regression guard for the escalation chain found in the 30 Aug 2026
+    audit (IAM_DESIGN.md §3.5): iam:CreateUser must carry a StringEquals
+    condition on iam:PermissionsBoundary, or the lab identity could create
+    a new cloudsentinel-lab-* user with NO boundary at all, attach an
+    admin-equivalent policy to it (also lab-scoped-ARN-permitted), and
+    mint that user's access key — never requesting anything outside the
+    boundary's own allowed resource prefix. Without this condition, the
+    ARN-prefix scoping from the original redesign (tested above) is
+    necessary but not sufficient."""
+    for stmt in _statements(boundary):
+        actions = stmt.get("Action", [])
+        if isinstance(actions, str):
+            actions = [actions]
+        if stmt.get("Effect") == "Allow" and "iam:CreateUser" in actions:
+            condition = stmt.get("Condition", {})
+            boundary_condition = condition.get("StringEquals", {})
+            assert "iam:PermissionsBoundary" in boundary_condition, (
+                "The Allow statement granting iam:CreateUser has no "
+                "StringEquals condition on iam:PermissionsBoundary — this "
+                "reopens the CreateUser -> AttachUserPolicy -> "
+                "CreateAccessKey escalation chain documented in "
+                "IAM_DESIGN.md §3.5. Every user this identity creates must "
+                "be forced to carry the same boundary it operates under."
+            )
+            return
+    pytest.fail("Could not find an Allow statement granting iam:CreateUser in the boundary.")
+
+
+def test_create_user_statement_is_not_combined_with_other_actions(boundary):
+    """iam:PermissionsBoundary is only populated in the request context for
+    CreateUser/CreateRole/Put*PermissionsBoundary calls. If CreateUser were
+    folded back into the same statement as unrelated actions (e.g.
+    CreateAccessKey, AttachUserPolicy), the missing context key on those
+    other calls would make the whole statement's Condition evaluate to
+    false and silently deny actions that are supposed to work — see
+    IAM_DESIGN.md §3.5 for why this has to be its own statement."""
+    for stmt in _statements(boundary):
+        actions = stmt.get("Action", [])
+        if isinstance(actions, str):
+            actions = [actions]
+        if "iam:CreateUser" in actions:
+            assert actions == ["iam:CreateUser"], (
+                f"iam:CreateUser must be alone in its Allow statement (with the "
+                f"iam:PermissionsBoundary condition), not combined with: "
+                f"{[a for a in actions if a != 'iam:CreateUser']}"
+            )
+            return
+    pytest.fail("Could not find a statement granting iam:CreateUser in the boundary.")
 
 
 def test_lab_weak_attached_policy_is_intentionally_broad():

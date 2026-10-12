@@ -2,10 +2,23 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "AllowCreatingBoundedLabUsers",
+      "Effect": "Allow",
+      "Action": "iam:CreateUser",
+      "Resource": "arn:aws:iam::${account_id}:user/cloudsentinel-lab-*",
+      "Condition": {
+        "StringEqualsIfExists": {
+          "aws:RequestTag/project": "cloudsentinel"
+        },
+        "StringEquals": {
+          "iam:PermissionsBoundary": "${boundary_policy_arn}"
+        }
+      }
+    },
+    {
       "Sid": "AllowManagingOwnLabScopedIamResources",
       "Effect": "Allow",
       "Action": [
-        "iam:CreateUser",
         "iam:DeleteUser",
         "iam:TagUser",
         "iam:UntagUser",
@@ -56,6 +69,17 @@
         "iam:PutRolePermissionsBoundary"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "DenyRewritingTheBoundaryPolicyItself",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:DeletePolicy"
+      ],
+      "Resource": "${boundary_policy_arn}"
     },
     {
       "Sid": "DenyPrivilegeEscalationPrimitives",

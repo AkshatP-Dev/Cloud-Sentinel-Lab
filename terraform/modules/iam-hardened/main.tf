@@ -39,8 +39,8 @@
 # main.tf).
 
 locals {
-  sns_topic_arn         = "arn:aws:sns:${var.aws_region}:${var.account_id}:${var.sns_topic_name}"
-  lab_user_arn          = "arn:aws:iam::${var.account_id}:user/${var.lab_user_name}"
+  sns_topic_arn          = "arn:aws:sns:${var.aws_region}:${var.account_id}:${var.sns_topic_name}"
+  lab_user_arn           = "arn:aws:iam::${var.account_id}:user/${var.lab_user_name}"
   responder_function_arn = "arn:aws:lambda:${var.aws_region}:${var.account_id}:function:${var.responder_function_name}"
 
   common_tags = {
@@ -89,11 +89,11 @@ resource "aws_iam_role_policy" "lambda_detector_exec" {
   role = aws_iam_role.lambda_detector_exec.id
 
   policy = templatefile("${path.module}/../../policies/lambda-detector-exec.json.tpl", {
-    sns_topic_arn           = local.sns_topic_arn
-    region                  = var.aws_region
-    account_id              = var.account_id
-    detector_function_name  = var.detector_function_name
-    responder_function_arn  = local.responder_function_arn
+    sns_topic_arn          = local.sns_topic_arn
+    region                 = var.aws_region
+    account_id             = var.account_id
+    detector_function_name = var.detector_function_name
+    responder_function_arn = local.responder_function_arn
   })
 }
 
@@ -113,10 +113,10 @@ resource "aws_iam_role_policy" "lambda_responder_exec" {
   role = aws_iam_role.lambda_responder_exec.id
 
   policy = templatefile("${path.module}/../../policies/lambda-responder-exec.json.tpl", {
-    lab_user_arn             = local.lab_user_arn
-    sns_topic_arn            = local.sns_topic_arn
-    region                   = var.aws_region
-    account_id               = var.account_id
-    responder_function_name  = var.responder_function_name
+    lab_user_arn            = local.lab_user_arn
+    sns_topic_arn           = local.sns_topic_arn
+    region                  = var.aws_region
+    account_id              = var.account_id
+    responder_function_name = var.responder_function_name
   })
 }

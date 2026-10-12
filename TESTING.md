@@ -55,9 +55,9 @@ This build environment has no `terraform` binary and no AWS credentials — it w
 | Check | Command | Result |
 |---|---|---|
 | Unit tests | `pytest tests/unit -q` | **36 passed**, 0 skipped, 0 failed |
-| Offline tests | `pytest tests/offline -q` | **11 passed**, 0 skipped, 0 failed |
-| Live tests | `pytest tests/live -q` | 0 passed, **26 skipped** (no deployed environment available here — expected, not a failure) |
-| Full suite | `pytest -q` | **47 passed, 26 skipped, 0 failed** (73 collected) |
+| Offline tests | `pytest tests/offline -q` | **13 passed**, 0 skipped, 0 failed |
+| Live tests | `pytest tests/live -q` | 0 passed, **29 skipped** (no deployed environment available here — expected, not a failure) |
+| Full suite | `pytest -q` | **49 passed, 29 skipped, 0 failed** (78 collected) |
 | Checkov | `checkov -d terraform/ --compact --quiet` | **59 passed, 0 failed, 23 skipped** (all 23 documented inline — see `SECURITY.md`) |
 | Custom structural validator | `python3 scripts/dev/validate_tf_structure.py` | **PASS** — 16 `.tf` files, 8 policy JSON/`.tpl` files, no `templatefile()`/`file()` wiring errors, valid JSON/IAM-statement grammar, balanced braces, valid module sources, no undeclared `var.X` references |
 | Static syntax check (`pyflakes`) | `pyflakes lambda/ tests/ scripts/dev/*.py` | Zero output — no unused imports, no undefined names |
